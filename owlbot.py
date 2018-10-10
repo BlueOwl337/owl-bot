@@ -611,13 +611,13 @@ async def on_reaction_add(reaction, user):
         elif user.id in fight_confirm_list:
             if reaction.emoji == u'\U00002694': #fight
                 match = next(p for p in data['Players'] if p['id'] == user.id)
-                print(fight_confirm_list)
+                await client.send_message(reaction.message.channel, fight_confirm_list)
                 pos = fight_confirm_list.index(user.id) + 1
                 result = fight_confirm_list.pop(pos)
-                print(pos)
+                await client.send_message(reaction.message.channel, pos)
                 fight_confirm_list.remove(user.id)
                 part = result.split('|')
-                print(part)
+                await client.send_message(reaction.message.channel, part)
                 if part[0] == 'W':
                     match['bank'] += int(part[1])
                     await client.send_message(reaction.message.channel, "\U0001F4B0 | **{} has won a fight and received a bounty of {} Tokens!**".format(user.name, part[1]))
