@@ -319,7 +319,7 @@ async def on_message(message):
 Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(Consumes daily charge)?".format(message.author.name, part[0]+type, u'\U000026A0', emoji_2, u'\U0001F497', part[6], u'\U0001F4B0', part[8]))
                                 #WIN/LOSS Calculations
                                 wep = match['wep'].split('|')
-                                if wep[7] > part[7]:
+                                if int(wep[7]) > int(part[7]):
                                     fight_confirm_list.append(message.author.id)
                                     fight_confirm_list.append('W|'+part[8])
                                 else:
