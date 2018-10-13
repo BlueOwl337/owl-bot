@@ -711,7 +711,7 @@ async def on_reaction_add(reaction, user):
                 old = match['wep'].split('|')
                 new = weaponGen().split('|')
                 #Renamed
-                old[3] = str(new[0]+old[2]+' ')
+                old[3] = str(new[0]+' '+old[2])
                 #Damage with New
                 damage_int = int(old[6])*int(new[1])*int(old[5])
                 damage = str(damage_int)
