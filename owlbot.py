@@ -28,6 +28,7 @@ bot_token = ''
 # Game essential
 buy_confirm_list = []
 sell_confirm_list = []
+reforge_confirm_list = []
 fight_confirm_list = []
 choice_list = []
 
@@ -161,6 +162,7 @@ async def on_message(message):
     global jdefault
     global buy_confirm_list
     global sell_confirm_list
+    global reforge_confirm_list
     global fight_confirm_list
     global formatter
     global weaponGen
@@ -637,6 +639,7 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
 async def on_reaction_add(reaction, user):
     global buy_confirm_list
     global sell_confirm_list
+    global reforge_confirm_list
     global fight_confirm_list
     global choice_list
     global weaponGen
