@@ -716,7 +716,7 @@ async def on_reaction_add(reaction, user):
                 damage_int = int(old[6])*int(new[1])*int(old[5])
                 damage = str(damage_int)
                 #Weapon Worth
-                worth = str(round(damage_int/15*int(rarity_m)))
+                worth = str(round(damage_int/15*int(old[5])))
                 #reassembly
                 reforged = new[0]+'|'+new[1]+'|'+old[2]+'|'+old[3]+'|'+old[4]+'|'+old[5]+'|'+old[6]+'|'+damage+'|'+worth
                 match['wep'] = reforged
