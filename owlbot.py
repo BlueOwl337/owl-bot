@@ -320,7 +320,7 @@ async def on_message(message):
                                 if match['wep'] == None:
                                     await client.send_message(message.channel, "\U0001F4DC | **{}, you currently do not have a weapon to reforge! Use '$owl weapon buy' to buy one**".format(message.author.name))
                                 else:
-                                    await client.send_message(message.channel, "\U0001F528 | **Would you really like to reforge your weapon's prefix? (React to emoji)** \n**Your Current Weapon:**\n {}\n \U0001F527 | **Reforging may increase or decrease your overall damage**".format(formatter(match['wep'], message.author.name)))
+                                    await client.send_message(message.channel, "\U0001F528 | **Would you really like to reforge your weapon's prefix? This will cost 500 Tokens (React to emoji)** \n**Your Current Weapon:**\n {}\n \U0001F527 | **Reforging may increase or decrease your overall damage**".format(formatter(match['wep'], message.author.name)))
                                     reforge_confirm_list.append(message.author.id)
                                     await client.add_reaction(message, u"\u2705")
                                     await client.add_reaction(message, u"\u274E")
@@ -720,6 +720,20 @@ async def on_reaction_add(reaction, user):
                 #reassembly
                 reforged = new[0]+'|'+new[1]+'|'+old[2]+'|'+old[3]+'|'+old[4]+'|'+old[5]+'|'+old[6]+'|'+damage+'|'+worth
                 match['wep'] = reforged
+                match['bank'] -= 500
+                with open('GameData.json', 'w') as file:
+                    file.write(json.dumps(data, default=jdefault, indent=2))
+                sync()
+                await client.send_message(client.get_channel("498311009635794964"),
+                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                reforge_confirm_list.remove(user.id)
+                await client.send_message(reaction.message.channel,
+                                          "\U0001F528 | **{} has reforged a weapon and got the {} Prefix**".format(user.name,
+                                                                                                       new[0]))
+            
+            elif reaction.emoji == u"\u274E":
+                reforge_confirm_list.remove(user.id)
+                await client.send_message(reaction.message.channel, "\U0001F44D | **Weapon Reforge Cancelled**")
 
         elif user.id in fight_confirm_list:
             if reaction.emoji == u'\U00002694':  # fight
