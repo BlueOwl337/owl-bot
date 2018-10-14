@@ -602,6 +602,7 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
 **$owl tokens** - Shows the user's current Token Balance\n\
 **$owl fight** - Daily fights that can grant/take away tokens\n\
 **$owl weapon buy/sell** - Buys/sells a weapon for tokens (500 Token to Buy)\n\
+**$owl weapon reforge** - Reforges a weapon for tokens (500 Token to Reforge)\n\
 ----------------------------\n\
 **Role Commands**\n\
 **$role [JOIN/LEAVE] [ROLE]** - Adds/Removes the defined role to the user\n\
