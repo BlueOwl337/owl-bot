@@ -363,12 +363,15 @@ async def on_message(message):
                                                               "\U0001F4DC | **{}, you currently do not have a weapon to reforge! Use '$owl weapon buy' to buy one**".format(
                                                                   message.author.name))
                                 else:
-                                    await client.send_message(message.channel,
+                                    if match['bank'] > 500:
+                                        await client.send_message(message.channel,
                                                               "\U0001F528 | **Would you really like to reforge your weapon's prefix? This will cost 500 Tokens (React to emoji)** \n**Your Current Weapon:**\n {}\n \U0001F527 | **Reforging may increase or decrease your overall damage**".format(
                                                                   formatter(match['wep'], message.author.name)))
-                                    reforge_confirm_list.append(message.author.id)
-                                    await client.add_reaction(message, u"\u2705")
-                                    await client.add_reaction(message, u"\u274E")
+                                        reforge_confirm_list.append(message.author.id)
+                                        await client.add_reaction(message, u"\u2705")
+                                        await client.add_reaction(message, u"\u274E")
+                                    else:
+                                        await client.send_message(message.channel, '**You do not have enough tokens to Reforge! (500 Tokens)**')
 
                         else:
                             if match['wep'] == None:
