@@ -1,12 +1,12 @@
 import discord
 import asyncio
 import random
-import authwriter
 import os
 import time
 import json
 from datetime import datetime, timedelta, date
 import sys
+import authwriter
 from discord.ext import commands
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
@@ -176,6 +176,22 @@ async def on_message(message):
         time.sleep(900)
     if message.author == client.user:
         return
+
+    elif message.content.startswith('$stop'):
+        PermCheck = str(message.author.id) in StopPermList
+        if PermCheck == True:
+            currentTime = str(date.today()) + ' by '
+            stopID = 'Bot Activity Terminated at ' + currentTime + message.author.id
+            print(stopID)
+            await client.send_message(client.get_channel("493017783135764486"), "{}".format(stopID))
+            await client.send_message(message.channel, 'Stopping...')
+            client.run(os.environ['BOT_TOKEN'])
+        else:
+            a = '<@'
+            b = str(message.author.id)
+            c = '> You do not possess the permissions to perform this command!'
+            await client.send_message(message.channel, a + b + c)
+
     elif message.content.startswith('$clean'):
         if message.author.id in StopPermList:
             syntax = message.content.split()
@@ -204,22 +220,6 @@ async def on_message(message):
             await client.send_message(message.channel,
                                       "{} Messages Searched for '{}', {} Messages have been cleaned.".format(limit, req,
                                                                                                              counter))
-
-    elif message.content.startswith('$stop'):
-        PermCheck = str(message.author.id) in StopPermList
-        if PermCheck == True:
-            currentTime = str(date.today()) + ' by '
-            stopID = ''
-            stopID = 'Bot Activity Terminated at ' + currentTime + message.author.id
-            print(stopID)
-            await client.send_message(client.get_channel("493017783135764486"), "{}".format(stopID))
-            await client.send_message(message.channel, 'Stopping...')
-            client.run(os.environ['BOT_TOKEN'])
-        else:
-            a = '<@'
-            b = str(message.author.id)
-            c = '> You do not possess the permissions to perform this command!'
-            await client.send_message(message.channel, a + b + c)
 
     elif message.content.startswith('$owl'):
         syntax = message.content.lower().split()
@@ -258,24 +258,65 @@ async def on_message(message):
             elif syntax[1].startswith('token'):
                 with open("GameData.json", "r+") as file:
                     data = json.loads(open('GameData.json').read())
-                    try:
-                        match = next(p for p in data['Players'] if p['id'] == message.author.id)
-                        await client.send_message(message.channel,
-                                                  '\U0001F3E6 | **{}, you currently have {} tokens in your bank account**'.format(
-                                                      message.author.name, match["bank"]))
-                    except StopIteration:
-                        NewPlayer = PlayerCreation(message.author.id, None, 0,
-                                                   str(datetime.today() - timedelta(days=2)),
-                                                   str(datetime.today() - timedelta(days=2)), None)
-                        data["Players"].append(NewPlayer)
-                        with open('GameData.json', 'w') as file:
-                            file.write(json.dumps(data, default=jdefault, indent=2))
-                        sync()
-                        await client.send_message(client.get_channel("498311009635794964"),
-                                                  "Synced To Google Drive Successfully.\n{}".format(str(data)))
-                        await client.send_message(message.channel,
-                                                  '\U0001F3E6 | **{}, you currently have 300 tokens in your bank account**'.format(
-                                                      message.author.name))
+                if len(syntax) > 2:
+                    if syntax[2] == 'gift':
+                        if len(syntax) == 5:
+                            try:
+                                amount = round(int(syntax[4]))
+                                recipient = next(p for p in data['Players'] if p['id'] == syntax[3].strip('<@>'))
+                            except ValueError:
+                                await client.send_message(message.channel, 'Invalid Amount!')
+                                return
+                            except StopIteration:
+                                await client.send_message(message.channel, 'Invalid Recipient!')
+                                return
+                            try:
+                                sender = next(p for p in data['Players'] if p['id'] == message.author.id)
+                            except StopIteration:
+                                NewPlayer = PlayerCreation(message.author.id, None, 200, str(datetime.today() - timedelta(days=2)),
+                                                           str(datetime.today() - timedelta(days=2)), None)
+                                data["Players"].append(NewPlayer)
+                                with open('GameData.json', 'w') as file:
+                                    file.write(json.dumps(data, default=jdefault, indent=2))
+                                sync()
+                                await client.send_message(client.get_channel("498311009635794964"),
+                                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                sender = next(p for p in data['Players'] if p['id'] == message.author.id)
+                            if sender['bank'] > amount:
+                                recipient['bank'] += amount
+                                sender['bank'] -= amount
+                                with open('GameData.json', 'w') as file:
+                                    file.write(json.dumps(data, default=jdefault, indent=2))
+                                await client.send_message(message.channel, '\U0001F381 | {} Gifted {} Tokens to {}!'.format(message.author.name, amount, syntax[3]))
+                                sync()
+                                await client.send_message(client.get_channel("498311009635794964"),
+                                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                            else:
+                                await client.send_message(message.channel, 'You do not have enough tokens to gift that many!')
+
+                        else:
+                            await client.send_message(message.channel, 'Invalid Usage of Command, Correct Usage: $owl token gift [RECIPiENT] [AMOUNT]')
+
+
+                else:
+                        try:
+                            match = next(p for p in data['Players'] if p['id'] == message.author.id)
+                            await client.send_message(message.channel,
+                                                      '\U0001F3E6 | **{}, you currently have {} tokens in your bank account**'.format(
+                                                          message.author.name, match["bank"]))
+                        except StopIteration:
+                            NewPlayer = PlayerCreation(message.author.id, None, 0,
+                                                       str(datetime.today() - timedelta(days=2)),
+                                                       str(datetime.today() - timedelta(days=2)), None)
+                            data["Players"].append(NewPlayer)
+                            with open('GameData.json', 'w') as file:
+                                file.write(json.dumps(data, default=jdefault, indent=2))
+                            sync()
+                            await client.send_message(client.get_channel("498311009635794964"),
+                                                      "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                            await client.send_message(message.channel,
+                                                      '\U0001F3E6 | **{}, you currently have 300 tokens in your bank account**'.format(
+                                                          message.author.name))
 
             elif syntax[1] == 'weapon':
                 with open("GameData.json", "r+") as file:
@@ -318,9 +359,13 @@ async def on_message(message):
 
                             elif syntax[2] == 'reforge':
                                 if match['wep'] == None:
-                                    await client.send_message(message.channel, "\U0001F4DC | **{}, you currently do not have a weapon to reforge! Use '$owl weapon buy' to buy one**".format(message.author.name))
+                                    await client.send_message(message.channel,
+                                                              "\U0001F4DC | **{}, you currently do not have a weapon to reforge! Use '$owl weapon buy' to buy one**".format(
+                                                                  message.author.name))
                                 else:
-                                    await client.send_message(message.channel, "\U0001F528 | **Would you really like to reforge your weapon's prefix? This will cost 500 Tokens (React to emoji)** \n**Your Current Weapon:**\n {}\n \U0001F527 | **Reforging may increase or decrease your overall damage**".format(formatter(match['wep'], message.author.name)))
+                                    await client.send_message(message.channel,
+                                                              "\U0001F528 | **Would you really like to reforge your weapon's prefix? This will cost 500 Tokens (React to emoji)** \n**Your Current Weapon:**\n {}\n \U0001F527 | **Reforging may increase or decrease your overall damage**".format(
+                                                                  formatter(match['wep'], message.author.name)))
                                     reforge_confirm_list.append(message.author.id)
                                     await client.add_reaction(message, u"\u2705")
                                     await client.add_reaction(message, u"\u274E")
@@ -599,7 +644,8 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
 ----------------------------\n\
 **Game Commands**\n\
 **$owl daily** - Gives a daily reward of 200 Tokens\n\
-**$owl tokens** - Shows the user's current Token Balance\n\
+**$owl token** - Shows the user's current Token Balance\n\
+**$owl token gift [RECIPIENT] [AMOUNT]** - Gifts specified amount of tokens to Recipient\n\
 **$owl fight** - Daily fights that can grant/take away tokens\n\
 **$owl weapon buy/sell** - Buys/sells a weapon for tokens (500 Token to Buy)\n\
 **$owl weapon reforge** - Reforges a weapon for tokens (500 Token to Reforge)\n\
@@ -711,15 +757,16 @@ async def on_reaction_add(reaction, user):
                 match = next(p for p in data['Players'] if p['id'] == user.id)
                 old = match['wep'].split('|')
                 new = weaponGen().split('|')
-                #Renamed
-                old[3] = str(new[0]+' '+old[2])
-                #Damage with New
-                damage_int = int(old[6])*int(new[1])*int(old[5])
+                # Renamed
+                old[3] = str(new[0] + ' ' + old[2])
+                # Damage with New
+                damage_int = int(old[6]) * int(new[1]) * int(old[5])
                 damage = str(damage_int)
-                #Weapon Worth
-                worth = str(round(damage_int/15*int(old[5])))
-                #reassembly
-                reforged = new[0]+'|'+new[1]+'|'+old[2]+'|'+old[3]+'|'+old[4]+'|'+old[5]+'|'+old[6]+'|'+damage+'|'+worth
+                # Weapon Worth
+                worth = str(round(damage_int / 15 * int(old[5])))
+                # reassembly
+                reforged = new[0] + '|' + new[1] + '|' + old[2] + '|' + old[3] + '|' + old[4] + '|' + old[5] + '|' + \
+                           old[6] + '|' + damage + '|' + worth
                 match['wep'] = reforged
                 match['bank'] -= 500
                 with open('GameData.json', 'w') as file:
@@ -729,9 +776,10 @@ async def on_reaction_add(reaction, user):
                                           "Synced To Google Drive Successfully.\n{}".format(str(data)))
                 reforge_confirm_list.remove(user.id)
                 await client.send_message(reaction.message.channel,
-                                          "\U0001F528 | **{} has reforged a weapon and got the {} Prefix**".format(user.name,
-                                                                                                       new[0]))
-            
+                                          "\U0001F528 | **{} has reforged a weapon and got the {} Prefix**".format(
+                                              user.name,
+                                              new[0]))
+
             elif reaction.emoji == u"\u274E":
                 reforge_confirm_list.remove(user.id)
                 await client.send_message(reaction.message.channel, "\U0001F44D | **Weapon Reforge Cancelled**")
