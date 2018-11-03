@@ -720,7 +720,8 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
 **Game Commands**\n\
 **$owl daily** - Gives a daily reward of 200 Tokens\n\
 **$owl tokens** - Shows the user's current Token Balance\n\
-**$owl token gift [USER(Ping)] [AMOUNT]** - Shows the user's current Token Balance\n\
+**$owl stats <USER(Mention)>** - Shows the leaderboard. It will show indivisual stats instead if user is mentioned\n\
+**$owl token gift [USER(Mention)] [AMOUNT]** - Shows the user's current Token Balance\n\
 **$owl fight** - Daily fights that can grant/take away tokens\n\
 **$owl weapon buy/sell** - Buys/sells a weapon for tokens (500 Token to Buy)\n\
 **$owl weapon reforge** - Reforges a weapon for tokens (500 Token to Reforge)\n\
