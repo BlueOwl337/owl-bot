@@ -505,12 +505,11 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                     last_fight = target['fighttime']
                     await client.send_message(message.channel,
                                               "**__Profile & Statistics for {}__**\n\
-    :crossed_swords: | **Weapon:**\n\
-    {}\n\
-    :bank: | **Bank: {} Tokens**\n\
-    :calendar_spiral: | **Last Daily Claim: {}**\n\
-    :alarm_clock: | **Last Fight: {}**".format(target_user, formatter(target["wep"], target_user.name), target['bank'],
-                                               last_daily[:16], last_fight[:16]))
+:bank: | **Bank: {} Tokens**\n\
+:calendar_spiral: | **Last Daily Claim: {}**\n\
+:alarm_clock: | **Last Fight: {}**\n\
+:crossed_swords: | **Weapon: {}**".format(target_user, target['bank'],
+                                               last_daily[:16], last_fight[:16], formatter(target["wep"], target_user.name)))
         else:
             await client.send_message(message.channel,
                                       "\U000026A0 | [Syntax Error] $owl command must have atleast 1 syntax! ($help for more Information)")
