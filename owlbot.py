@@ -486,6 +486,7 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                         top.insert(0, user.name)
                         top.insert(1, str(bank_list[counter]))
                         counter -= 1
+                    print(top)
                     await client.send_message(message.channel,
                                               "\U0001F4CB **__Top 5 LeaderBoards__**\U0001F4CB \n\
     **Current Leaderboards For tokens:**\n\
