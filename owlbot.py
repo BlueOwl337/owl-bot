@@ -477,12 +477,10 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                     bank_list = []
                     for player in data['Players']:
                         bank_list.append(player['bank'])
-                    print(bank_list)
-                    bank_list.sort()
-                    print(bank_list)
-                    counter = 5
+                    bank_list.sort(reverse=True)
+                    counter = 4
                     top = []
-                    while counter > 0:
+                    while counter >= 0:
                         match = next(p for p in data['Players'] if p['bank'] == bank_list[counter])
                         user = await client.get_user_info(match['id'])
                         top.insert(0, user.name)
