@@ -470,6 +470,46 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                         await client.send_message(message.channel,
                                                   "\U0001F4DC | **{}, you currently do not have a weapon to fight! Use '$owl weapon buy' to buy one**".format(
                                                       message.author.name))
+                        
+            elif syntax[1] == 'stats':
+                data = json.loads(open('GameData.json').read())
+                if len(syntax) < 3:
+                    bank_list = []
+                    for player in data['Players']:
+                        bank_list.append(player['bank'])
+                    bank_list.sort()
+                    counter = 5
+                    top = []
+                    while counter > 0:
+                        match = next(p for p in data['Players'] if p['bank'] == bank_list[counter])
+                        user = await client.get_user_info(match['id'])
+                        top.insert(0, user.name)
+                        top.insert(1, str(bank_list[counter]))
+                        counter -= 1
+                    await client.send_message(message.channel,
+                                              "\U0001F4CB **__Top 5 LeaderBoards__**\U0001F4CB \n\
+    **Current Leaderboards For tokens:**\n\
+    \U0001F947 | **{} | {} Tokens \U0001F3C6**\n\
+    \U0001F948 | **{} | {} Tokens \U0001F4B0**\n\
+    \U0001F949 | **{} | {} Tokens \U0001F4B8**\n\
+    -------------------------\n\
+    \U00000034\U000020E3 | **{} | {} Tokens**\n\
+    \U00000035\U000020E3 | **{} | {} Tokens**".format(top[0], top[1], top[2], top[3], top[4], top[5], top[6], top[7],
+                                                      top[8], top[9]))
+                else:
+                    # indivisual stats
+                    target = next(p for p in data['Players'] if p['id'] == syntax[2].strip('<@>'))
+                    target_user = await client.get_user_info(target['id'])
+                    last_daily = target['dailytime']
+                    last_fight = target['fighttime']
+                    await client.send_message(message.channel,
+                                              "**__Profile & Statistics for {}__**\n\
+    :crossed_swords: | **Weapon:**\n\
+    {}\n\
+    :bank: | **Bank: {} Tokens**\n\
+    :calendar_spiral: | **Last Daily Claim: {}**\n\
+    :alarm_clock: | **Last Fight: {}**".format(target_user, formatter(target["wep"], target_user.name), target['bank'],
+                                               last_daily[:16], last_fight[:16]))
         else:
             await client.send_message(message.channel,
                                       "\U000026A0 | [Syntax Error] $owl command must have atleast 1 syntax! ($help for more Information)")
