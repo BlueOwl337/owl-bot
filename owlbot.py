@@ -499,7 +499,11 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                                                       top[8], top[9]))
                 else:
                     # indivisual stats
-                    target = next(p for p in data['Players'] if p['id'] == syntax[2].strip('<@>'))
+                    try:
+                        target = next(p for p in data['Players'] if p['id'] == syntax[2].strip('<@>'))
+                    except StopIteration:
+                        await client.send_message(message.channel, "\U000026A0 **| Specified Player cannot be found in the database. Please make sure to you mention the user using @user**")
+                        return
                     target_user = await client.get_user_info(target['id'])
                     last_daily = target['dailytime']
                     last_fight = target['fighttime']
@@ -508,7 +512,7 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
 :bank: | **Bank: {} Tokens**\n\
 :calendar_spiral: | **Last Daily Claim: {}**\n\
 :alarm_clock: | **Last Fight: {}**\n\
-:crossed_swords: | **Weapon: {}**".format(target_user, target['bank'],
+:crossed_swords: | **Weapon:** {}".format(target_user, target['bank'],
                                                last_daily[:16], last_fight[:16], formatter(target["wep"], target_user.name)))
         else:
             await client.send_message(message.channel,
