@@ -289,7 +289,7 @@ async def on_message(message):
                                 await client.send_message(client.get_channel("498311009635794964"),
                                                           "Synced To Google Drive Successfully.\n{}".format(str(data)))
                                 sender = next(p for p in data['Players'] if p['id'] == message.author.id)
-                            if sender['bank'] > amount:
+                            if sender['bank'] > amount and amount > 0:
                                 recipient['bank'] += amount
                                 sender['bank'] -= amount
                                 with open('GameData.json', 'w') as file:
