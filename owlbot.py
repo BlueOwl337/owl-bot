@@ -120,6 +120,7 @@ class PlayerCreation():
         self.temp_wep = ''
         self.inventory = inventory
 
+
 class RaffleCreation():
     def __init__(self, messageid, hostid, limit, prize, key):
         self.messageid = messageid
@@ -128,6 +129,7 @@ class RaffleCreation():
         self.limit = limit
         self.prize = prize
         self.key = key
+
 
 def sync(dest):
     global drive
@@ -154,13 +156,10 @@ async def on_ready():
     print(client.user.id)
     print('------')
     await client.change_presence(game=discord.Game(name='with his Owlets ($help)'))
-    data = json.loads(open('GameData.json').read())
     await client.send_message(client.get_channel("498311009635794964"),
-                                "[DYNO RESTART] Synced From Google Drive Successfully.\n{}".format(str(data)))
-    data = json.loads(open('RaffleData.json').read())
+                              "[DYNO RESTART] Synced Game Data From Google Drive Successfully at {}".format(str(datetime.today())))
     await client.send_message(client.get_channel("503093220146806794"),
-                              "[DYNO RESTART] Synced From Google Drive Successfully.\n{}".format(str(data)))
-
+                              "[DYNO RESTART] Synced Raffle Data From Google Drive Successfully at {}".format(str(datetime.today())))
 
 
 @client.event
@@ -239,13 +238,16 @@ async def on_message(message):
                         if abs(datetime.strptime(match["dailytime"][:10], '%Y-%m-%d').date() - date.today()).days >= 1:
                             match['bank'] += 200
                             match["dailytime"] = str(datetime.today())
+                            await client.send_message(message.channel,
+                                                      '\U0001F4B0 | **{} has received 200 tokens**'.format(
+                                                          message.author.name))
                             file.seek(0)  # rewind
                             json.dump(data, file, indent=2)
                             file.truncate()
                             sync('game')
-                            await client.send_message(message.channel,
-                                                      '\U0001F4B0 | **{} has received 200 tokens**'.format(
-                                                          message.author.name))
+                            await client.send_message(client.get_channel("498311009635794964"),
+                                                      "Synced To Google Drive Successfully at {} for {}'s Daily Claim".format(
+                                                          str(datetime.today()), message.author.id))
                         else:
                             await client.send_message(message.channel,
                                                       '\U0001F550 | {} daily rewards can only be claimed every 24 hours. (Last Claimed: {})'.format(
@@ -256,11 +258,13 @@ async def on_message(message):
                         data["Players"].append(NewPlayer)
                         with open('GameData.json', 'w') as file:
                             file.write(json.dumps(data, default=jdefault, indent=2))
-                        sync('game')
-                        await client.send_message(client.get_channel("498311009635794964"),
-                                                  "Synced To Google Drive Successfully.\n{}".format(str(data)))
                         await client.send_message(message.channel, '\U0001F4B0 | **{} has received 200 tokens**'.format(
                             message.author.name))
+                        sync('game')
+                        await client.send_message(client.get_channel("498311009635794964"),
+                                                  "Synced To Google Drive Successfully at {} for New Player Creation. Player ID: {}".format(
+                                                      str(datetime.today()), message.author.id))
+
 
             elif syntax[1].startswith('token'):
                 with open("GameData.json", "r+") as file:
@@ -280,50 +284,57 @@ async def on_message(message):
                             try:
                                 sender = next(p for p in data['Players'] if p['id'] == message.author.id)
                             except StopIteration:
-                                NewPlayer = PlayerCreation(message.author.id, None, 200, str(datetime.today() - timedelta(days=2)),
+                                NewPlayer = PlayerCreation(message.author.id, None, 200,
+                                                           str(datetime.today() - timedelta(days=2)),
                                                            str(datetime.today() - timedelta(days=2)), None)
                                 data["Players"].append(NewPlayer)
                                 with open('GameData.json', 'w') as file:
                                     file.write(json.dumps(data, default=jdefault, indent=2))
                                 sync('game')
                                 await client.send_message(client.get_channel("498311009635794964"),
-                                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                                          "Synced To Google Drive Successfully at {} for New Player Creation. Player ID: {}".format(
+                                                      str(datetime.today()), message.author.id))
                                 sender = next(p for p in data['Players'] if p['id'] == message.author.id)
                             if sender['bank'] > amount and amount > 0:
                                 recipient['bank'] += amount
                                 sender['bank'] -= amount
                                 with open('GameData.json', 'w') as file:
                                     file.write(json.dumps(data, default=jdefault, indent=2))
-                                await client.send_message(message.channel, '\U0001F381 | {} Gifted {} Tokens to {}!'.format(message.author.name, amount, syntax[3]))
+                                await client.send_message(message.channel,
+                                                          '\U0001F381 | {} Gifted {} Tokens to {}!'.format(
+                                                              message.author.name, amount, syntax[3]))
                                 sync('game')
                                 await client.send_message(client.get_channel("498311009635794964"),
-                                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                                          "Synced To Google Drive Successfully at {} for gifting ({} to {})".format(str(datetime.today()), sender['id'], recipient['id']))
                             else:
-                                await client.send_message(message.channel, 'You do not have enough tokens to gift that many!')
+                                await client.send_message(message.channel,
+                                                          'You do not have enough tokens to gift that many!')
 
                         else:
-                            await client.send_message(message.channel, 'Invalid Usage of Command, Correct Usage: $owl token gift [RECIPiENT] [AMOUNT]')
+                            await client.send_message(message.channel,
+                                                      'Invalid Usage of Command, Correct Usage: $owl token gift [RECIPiENT] [AMOUNT]')
 
 
                 else:
-                        try:
-                            match = next(p for p in data['Players'] if p['id'] == message.author.id)
-                            await client.send_message(message.channel,
-                                                      '\U0001F3E6 | **{}, you currently have {} tokens in your bank account**'.format(
-                                                          message.author.name, match["bank"]))
-                        except StopIteration:
-                            NewPlayer = PlayerCreation(message.author.id, None, 0,
-                                                       str(datetime.today() - timedelta(days=2)),
-                                                       str(datetime.today() - timedelta(days=2)), None)
-                            data["Players"].append(NewPlayer)
-                            with open('GameData.json', 'w') as file:
-                                file.write(json.dumps(data, default=jdefault, indent=2))
-                            sync('game')
-                            await client.send_message(client.get_channel("498311009635794964"),
-                                                      "Synced To Google Drive Successfully.\n{}".format(str(data)))
-                            await client.send_message(message.channel,
-                                                      '\U0001F3E6 | **{}, you currently have 300 tokens in your bank account**'.format(
-                                                          message.author.name))
+                    try:
+                        match = next(p for p in data['Players'] if p['id'] == message.author.id)
+                        await client.send_message(message.channel,
+                                                  '\U0001F3E6 | **{}, you currently have {} tokens in your bank account**'.format(
+                                                      message.author.name, match["bank"]))
+                    except StopIteration:
+                        NewPlayer = PlayerCreation(message.author.id, None, 0,
+                                                   str(datetime.today() - timedelta(days=2)),
+                                                   str(datetime.today() - timedelta(days=2)), None)
+                        data["Players"].append(NewPlayer)
+                        with open('GameData.json', 'w') as file:
+                            file.write(json.dumps(data, default=jdefault, indent=2))
+                        sync('game')
+                        await client.send_message(client.get_channel("498311009635794964"),
+                                                  "Synced To Google Drive Successfully at {} for New Player Creation. Player ID: {}".format(
+                                                      str(datetime.today()), message.author.id))
+                        await client.send_message(message.channel,
+                                                  '\U0001F3E6 | **{}, you currently have 300 tokens in your bank account**'.format(
+                                                      message.author.name))
 
             elif syntax[1] == 'weapon':
                 with open("GameData.json", "r+") as file:
@@ -402,7 +413,8 @@ async def on_message(message):
                             file.write(json.dumps(data, default=jdefault, indent=2))
                         sync('game')
                         await client.send_message(client.get_channel("498311009635794964"),
-                                                  "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                                  "Synced To Google Drive Successfully at {} for New Player Creation. Player ID: {}".format(
+                                                      str(datetime.today()), message.author.id))
                         await client.send_message(message.channel,
                                                   "\U0001F4DC | **{}, you currently do not have a weapon! Use '$owl weapon buy' to buy one**".format(
                                                       message.author.name))
@@ -466,11 +478,12 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                             file.write(json.dumps(data, default=jdefault, indent=2))
                         sync('game')
                         await client.send_message(client.get_channel("498311009635794964"),
-                                                  "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                                  "Synced To Google Drive Successfully at {} for New Player Creation. Player ID: {}".format(
+                                                      str(datetime.today()), message.author.id))
                         await client.send_message(message.channel,
                                                   "\U0001F4DC | **{}, you currently do not have a weapon to fight! Use '$owl weapon buy' to buy one**".format(
                                                       message.author.name))
-                        
+
             elif syntax[1] == 'stats':
                 data = json.loads(open('GameData.json').read())
                 if len(syntax) < 3:
@@ -502,7 +515,8 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                     try:
                         target = next(p for p in data['Players'] if p['id'] == syntax[2].strip('<@>'))
                     except StopIteration:
-                        await client.send_message(message.channel, "\U000026A0 **| Specified Player cannot be found in the database. Please make sure to you mention the user using @user**")
+                        await client.send_message(message.channel,
+                                                  "\U000026A0 **| Specified Player cannot be found in the database. Please make sure to you mention the user using @user**")
                         return
                     target_user = await client.get_user_info(target['id'])
                     last_daily = target['dailytime']
@@ -513,7 +527,7 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
 :calendar_spiral: | **Last Daily Claim: {}**\n\
 :alarm_clock: | **Last Fight: {}**\n\
 :crossed_swords: | **Weapon:** {}".format(target_user, target['bank'],
-                                               last_daily[:16], last_fight[:16], formatter(target["wep"], target_user.name)))
+                                          last_daily[:16], last_fight[:16], formatter(target["wep"], target_user.name)))
         else:
             await client.send_message(message.channel,
                                       "\U000026A0 | [Syntax Error] $owl command must have atleast 1 syntax! ($help for more Information)")
@@ -584,7 +598,9 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                     data = json.loads(open('RaffleData.json').read())
                     try:
                         match = next(p for p in data['Raffles'] if p['hostid'] == message.author.id)
-                        await client.send_message(message.channel, "**{} You already have an ongoing raffle! Please draw it before opening a new one**".format(message.author.name))
+                        await client.send_message(message.channel,
+                                                  "**{} You already have an ongoing raffle! Please draw it before opening a new one**".format(
+                                                      message.author.name))
                     except StopIteration:
                         limit = None
                         prize = None
@@ -603,19 +619,20 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                                                           '<@' + message.author.id + '>', limit))
                         else:
                             await client.send_message(message.channel,
-                                                  "\U0001F3B2 | **Raffle started by {} for {}! [Entry Limit: {}]\nReact to the emoji to join!**".format(
-                                                      '<@' + message.author.id + '>', prize, limit))
+                                                      "\U0001F3B2 | **Raffle started by {} for {}! [Entry Limit: {}]\nReact to the emoji to join!**".format(
+                                                          '<@' + message.author.id + '>', prize, limit))
 
                         async for msg in client.logs_from(message.channel, limit=5):
                             if msg.author.id == '357697820938993666':
                                 await client.add_reaction(msg, u'\U0001F39F')
-                                data["Raffles"].append(RaffleCreation(msg.id, message.author.id, limit, prize, str(key)))
+                                data["Raffles"].append(
+                                    RaffleCreation(msg.id, message.author.id, limit, prize, str(key)))
                                 with open('RaffleData.json', 'w') as file:
                                     file.write(json.dumps(data, default=jdefault, indent=2))
                                 sync('raffle')
                                 data = json.loads(open('RaffleData.json').read())
                                 await client.send_message(client.get_channel("503093220146806794"),
-                                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                                          "Synced To Google Drive Successfully at {} for Raffle creation by {}".format(str(datetime.today()), message.author.id))
                                 break
                         await client.send_message(message.author,
                                                   "Your Raffle has been Successfully Created with the Force Draw Key of **{}**. You can share this key with anyone and they will be able to draw your raffle at any time using `$raffle draw {}`".format(
@@ -636,13 +653,14 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                                 return
                         else:
                             await client.send_message(message.channel,
-                                                  "**{} Only the host can draw the winner!**".format(
-                                                      message.author.name))
+                                                      "**{} Only the host can draw the winner!**".format(
+                                                          message.author.name))
                             return
                     try:
                         msg = await client.get_message(message.channel, id=match['messageid'])
                     except:
-                        await client.send_message(message.channel, "**The Raffle Message cannot be found. Please try the channel the raffle was started in. (Contact BlueOwl if Issue Persists)**")
+                        await client.send_message(message.channel,
+                                                  "**The Raffle Message cannot be found. Please try the channel the raffle was started in. (Contact BlueOwl if Issue Persists)**")
                     reaction_object = msg.reactions[0]
                     users = await client.get_reaction_users(reaction_object)
                     entries = []
@@ -676,14 +694,14 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                                                           "\U0001F389 | __**{} Won the Raffle! Congratulations!**__".format(
                                                               '<@' + winner + '>'))
                     else:
-                        #yes Prize no limit
+                        # yes Prize no limit
                         if match['limit'] == None:
                             print('prize')
                             await client.send_message(message.channel,
                                                       "\U0001F389 | __**{} Won the Raffle for {}! Congratulations!**__".format(
                                                           '<@' + winner + '>', match['prize']))
                         else:
-                            #yes Prize yes limit
+                            # yes Prize yes limit
                             print('prize limit')
                             late = 0
                             while match['limit'] < len(entries):
@@ -692,21 +710,24 @@ Would you like to **[RUN AWAY]**(Does not Consume Daily Charge) or **[FIGHT]**(C
                             if late > 0:
                                 await client.send_message(message.channel,
                                                           "\U0001F389 | __**{} Won the Raffle for {}! Congratulations!**__\n**The last {} entrants were elimated as the raffle defined a maximum limit of entrants to {}.**".format(
-                                                              '<@' + winner + '>', match['prize'], late, match['limit']))
+                                                              '<@' + winner + '>', match['prize'], late,
+                                                              match['limit']))
                             else:
                                 await client.send_message(message.channel,
                                                           "\U0001F389 | __**{} Won the Raffle for {}! Congratulations!**__".format(
                                                               '<@' + winner + '>', match['prize']))
                     host = await client.get_user_info(match['hostid'])
                     winner_name = await client.get_user_info(winner)
-                    await client.send_message(host, "Your raffle has ended with {} as the winner! (ID: {}). You can now start a new raffle".format(winner_name, winner))
+                    await client.send_message(host,
+                                              "Your raffle has ended with {} as the winner! (ID: {}). You can now start a new raffle".format(
+                                                  winner_name, winner))
                     data['Raffles'].remove(match)
                     with open('RaffleData.json', 'w') as file:
                         file.write(json.dumps(data, default=jdefault, indent=2))
                     sync('raffle')
                     data = json.loads(open('RaffleData.json').read())
                     await client.send_message(client.get_channel("503093220146806794"),
-                                              "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                              "Synced To Google Drive Successfully at {} for Completion of Raffle".format(str(datetime.today())))
 
     elif message.content.startswith('$help'):
         await client.send_message(message.channel, "__**List of Commands**__\n\
@@ -780,23 +801,23 @@ async def on_reaction_add(reaction, user):
                     file.write(json.dumps(data, default=jdefault, indent=2))
                 sync('game')
                 await client.send_message(client.get_channel("498311009635794964"),
-                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                          "Synced To Google Drive Successfully at {} for temp weapon set \n{} \nof {}".format(str(datetime.today()), match['temp_wep'], match['id']))
                 buy_confirm_list.remove(user.id)
                 if match['wep'] == None:
                     match['wep'] = match['temp_wep']
                     match['bank'] -= 500
-                    with open('GameData.json', 'w') as file:
-                        file.write(json.dumps(data, default=jdefault, indent=2))
-                    sync('game')
-                    await client.send_message(client.get_channel("498311009635794964"),
-                                              "Synced To Google Drive Successfully.\n{}".format(str(data)))
                     await client.send_message(reaction.message.channel,
                                               "\U0001F4EC | **{} has received a new weapon!**\n{}".format(user.name,
                                                                                                           formatter(
                                                                                                               match[
                                                                                                                   'temp_wep'],
                                                                                                               user.name)))
-                else:
+                    with open('GameData.json', 'w') as file:
+                        file.write(json.dumps(data, default=jdefault, indent=2))
+                    sync('game')
+                    await client.send_message(client.get_channel("498311009635794964"),
+                                              "Synced To Google Drive Successfully at {} for {}'s weapon set\n {}".format(str(datetime.today()), match['id'], match['wep']))
+                else: #If user has a weapon already
                     await client.send_message(reaction.message.channel,
                                               "\U0001F6AB | **You cannot have 2 weapons at once! You will need to choose which to keep. (React to Emoji)**\n**__1. Original Weapon__**\n{}\n\n**__2. New Weapon__**\n{}".format(
                                                   formatter(match["wep"], user.name),
@@ -816,16 +837,17 @@ async def on_reaction_add(reaction, user):
                 match = next(p for p in data['Players'] if p['id'] == user.id)
                 part = match['wep'].split('|')
                 match['bank'] += int(part[8])
+                temp = match['wep']
                 match['wep'] = None
                 with open('GameData.json', 'w') as file:
                     file.write(json.dumps(data, default=jdefault, indent=2))
-                sync('game')
-                await client.send_message(client.get_channel("498311009635794964"),
-                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
                 sell_confirm_list.remove(user.id)
                 await client.send_message(reaction.message.channel,
                                           "\U0001F4B0 | **{} has sold a weapon for {} Tokens**".format(user.name,
                                                                                                        part[8]))
+                sync('game')
+                await client.send_message(client.get_channel("498311009635794964"),
+                                          "Synced To Google Drive Successfully at {} for {}'s Sale of weapon \n{}".format(str(datetime.today()), match['id'], temp))
 
             elif reaction.emoji == u"\u274E":
                 sell_confirm_list.remove(user.id)
@@ -850,14 +872,14 @@ async def on_reaction_add(reaction, user):
                 match['bank'] -= 500
                 with open('GameData.json', 'w') as file:
                     file.write(json.dumps(data, default=jdefault, indent=2))
-                sync('game')
-                await client.send_message(client.get_channel("498311009635794964"),
-                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
                 reforge_confirm_list.remove(user.id)
                 await client.send_message(reaction.message.channel,
                                           "\U0001F528 | **{} has reforged a weapon and got the {} Prefix**".format(
                                               user.name,
                                               new[0]))
+                sync('game')
+                await client.send_message(client.get_channel("498311009635794964"),
+                                          "Synced To Google Drive Successfully at {} for {}'s reforge. From {} to {}".format(str(datetime.today()), match['id'], old[0], new[0]))
 
             elif reaction.emoji == u"\u274E":
                 reforge_confirm_list.remove(user.id)
@@ -885,7 +907,7 @@ async def on_reaction_add(reaction, user):
                     file.write(json.dumps(data, default=jdefault, indent=2))
                 sync('game')
                 await client.send_message(client.get_channel("498311009635794964"),
-                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
+                                          "Synced To Google Drive Successfully at {} for {}'s fight".format(str(datetime.today()), match['id']))
 
             elif reaction.emoji == u'\U0001F3C3':  # run
                 fight_confirm_list.remove(user.id)
@@ -899,35 +921,37 @@ async def on_reaction_add(reaction, user):
                 match = next(p for p in data['Players'] if p['id'] == user.id)
                 part = match['wep'].split('|')
                 sale = part[8]
+                temp = match['wep']
                 match['wep'] = match['temp_wep']
                 match['bank'] -= 500
                 match['bank'] += int(sale)
                 with open('GameData.json', 'w') as file:
                     file.write(json.dumps(data, default=jdefault, indent=2))
-                sync('game')
-                await client.send_message(client.get_channel("498311009635794964"),
-                                          "Synced To Google Drive Successfully.\n{}".format(str(data)))
                 choice_list.remove(user.id)
                 await client.send_message(reaction.message.channel,
                                           "\U00002694 | **{} has sold his old weapon for {} and received a new weapon!**\n{}".format(
                                               user.name, sale, formatter(match['temp_wep'])))
+                sync('game')
+                await client.send_message(client.get_channel("498311009635794964"),
+                                          "Synced To Google Drive Successfully at {} for {}'s weapon choice. ({} to {})".format(str(datetime.today()), match['id'], temp, match['temp_wep']))
             elif reaction.emoji == u'\U0001F502':  # old
                 choice_list.remove(user.id)
                 await client.send_message(reaction.message.channel,
                                           "\U0001F44D | **{} decides to keep his old weapon**".format(user.name))
+
 
 def authentication():
     global drive
     gauth = GoogleAuth()
     gauth.LocalWebserverAuth()
     drive = GoogleDrive(gauth)
-    #Game Sync
+    # Game Sync
     drive_file = drive.CreateFile({'id': os.environ['GAME_FILE_ID']})
     drive_content = drive_file.GetContentString()
     with open('GameData.json', 'w') as file:
         data = json.loads(drive_content)
         file.write(json.dumps(data, default=jdefault, indent=2))
-    #Raffle Sync
+    # Raffle Sync
     drive_file = drive.CreateFile({'id': os.environ['RAFFLE_FILE_ID']})
     drive_content = drive_file.GetContentString()
     with open('RaffleData.json', 'w') as file:
